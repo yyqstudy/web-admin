@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--mybatis SQL配置文件-->
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.admin.mapper.AccountMapper">
+    <!--等同于在这个xml文件中定义接口文件AccountMapper.java里面的每一个getAcct()是怎么使用的
+     public Account getAcct(Long id); -->
+
+    <!--id也就是标签名等于方法名 -->
+    <!--查询方法 查询数据库的表account_db-->
+    <select id="getAcct" resultType="com.example.admin.bean.Account">
+        select * from  account_db where  id=#{id}
+    </select>
+
+
+</mapper>

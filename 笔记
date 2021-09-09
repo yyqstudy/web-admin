@@ -1,0 +1,531 @@
+
+
+来到主页，一刷新，表单重复提交，再次来到登录页面
+解决：主页刷新还在主页--redirect重定向
+
+如何解决登录成功--要在主页作判断
+1、写一个Class User
+2、然后去login.html的form表单，添加userName和password--form表单提交会把userName和password带上
+3、 在IndexController那里
+    String username,String password封装成Class User ，登录成功把它们放在Session里面
+    第一个判断userName和password都不为空，就说明登录成功
+     session.setAttribute把登录成功的用户存起来
+     登录成功--主页
+     登录失败--回到登录页面
+     一般登录失败会有提示信息--引入Model-- model.addAttribute("msg","账号或密码错误");
+     转发回到登录页面，所以把登录页面要去的所有内容放在Model里面
+       ||  ||
+       ||  ||
+        \\ //
+     第二个判断
+     去main页面： 来到后台页面要作判断，是否登录了，防止没有登录的就直接访问到main页面
+        ||  ||
+        ||  ||
+         \\ //
+     把login页面的错误提示信息取出来--login.html
+     <label style="color:red " th:text="${msg}"></label>
+        ||  ||
+        ||  ||
+         \\ //
+     登录成功后，主页要显示用户名字--在main页面修改
+     <!--修改用户名，但是用户名不在标签内，直接是html文本-->
+         <!--John Doe-->
+      [[${session.logUser.userName}]]
+
+========================Dash Tables四个子页面============================
+   希望能点击Dash Tables能显示它四个子页面
+     ||  ||
+     ||  ||
+      \\ //
+   templates下面新建一个table，用来放table相关的页面
+   然后创建tableController,用来处理table下面的页面跳转
+   先写四个方法，来到四个不同table页面
+   这四个html页面记得加上xmlns:th="http://www.thymeleaf.org
+        ||  ||
+        ||  ||
+         \\ //
+   希望简洁修改页面跳转路径--以后只在一个common 页面修改路径即可： basic_table.html改成basic_table
+   每个页面公共部分抽取放到一个common页面
+           ||  ||
+          ||  ||
+           \\ //
+   怎么抽取公共内容:两种方法（th:fragment和选择器id）
+   方法一
+   Template Layout
+   抽取
+    <div th:fragment="copy">
+        &copy; 2011 The Good Thymes Virtual Grocery
+      </div>
+   引用的时候<div th:insert="~{footer :: copy}"></div>
+
+   方法二
+   抽取<div id ="commonscript"></div>
+   引用:<div th:replace="common :: #commonscript"></div>
+
+
+=========================页面修改bug===================
+在common.html
+1、点击左侧菜单的Dashboard跳转到main页面而不是默认的index
+   <li><a th:href="@{/main.html}"><i class="fa fa-home"></i> <span>Dashboard</span></a></li>
+2、在页面右侧显示登录名字
+  <!--John Doe页面右侧显示登录名字-->
+   [[${session.logUser.userName}]]
+
+3、右上角的logout一点击就回到login页面
+  <li><a th:href="@{/}"><i class="fa fa-sign-out"></i> Log Out</a></li>
+
+4、在Advanced Table里面有一个表格，表格内容是动态遍历出来的 而不是写死的 ---
+    TableController中的dynamic_table()
+              //表格内容的遍历--例子：User为例
+              //创建User对象
+              List<User> users = Arrays.asList(new User("alex","11111"),
+                            new User("alisa","11333"),
+                             new User("lucy","aaabb"),
+                              new User("sylia","77777"));
+              //把User对象放在model里面（也就是请求域里面）: users是List<User> users,赋值给"users"
+              model.addAttribute("users",users);
+
+   然后在dynamic_table.html把<tr></tr>里面的内容删掉，不要这些写死的，而是要动态遍历的
+   遍历状态（包括索引）修改
+
+
+   <!--表格内容的遍历出来的-->
+   <!--model.addAttribute("users",users);-->
+    <tr class="gradeX" th:each="user:${users}">
+      <td>Trident</td>
+     <!--取出用户名和密码：两种方法-->
+     <td th:text="${user.userName}"></td>
+     <td>[[${user.password}]]</td>
+
+=========================拦截器===================
+🌟🌟🌟🌟用到的文件：LoginInterceptor.java   AdminWebConfig.java
+
+在controller之前或者之后干点事情
+创建一个LoginInterceptor,继承接口HandlerInterceptor--登录检查
+         ||  ||
+         ||  ||
+          \\ //
+要把写好的LoginInterceptor里面的方法放在IOC容器中--创建一个配置文件AdminWebConfig，继承接口WebMvcConfigurer
+               --把自定义的拦截器写在里面
+                 但是要注意放行的路径要包括static下面的，否则页面会很丑
+🌟而且有了拦截器，之前在IndexController里面去main页面的登录检查就不需要了
+
+
+1、编写一个拦截器实现HandlerInterceptor接口
+2、拦截器注册到容器中（实现WebMvcConfigurer的addInterceptors）
+3、指定拦截规则【如果是拦截所有，静态资源也会被拦截】
+
+
+=========================文件上传=======================
+🌟🌟🌟🌟用到的文件：form_layouts.html、FormController.java
+Forms中的form_layouts.html
+创建FormController
+记得在common.html改一下菜单地址    <li><a th:href="@{form_layouts.html}"> Form Layouts</a></li>
+           ||  ||
+           ||  ||
+            \\ //
+         去form_layouts.html
+
+      <!--文件上传表单 上传请求链接-->
+      <form role="form" th:action="@{/upload}" method="post" enctype="multipart/form-data">
+
+          <!--单文件上传-->
+           <div class="form-group">
+                <label for="exampleInputFile">头像</label>
+                <input type="file" name="headerImg" id="exampleInputFile">
+           </div>
+           <!--多文件上传-->
+           <div class="form-group">
+                <label for="exampleInputFile">生活照</label>
+                <input type="file" name="photos" multiple>
+           </div>
+
+             ||  ||
+             ||  ||
+             \\ //
+     去controller处理上传请求
+     1、从请求参数中获取以下
+            * @RequestParam("email") String email,
+            * @RequestParam("username") String username,
+            * @RequestPart("headerImg")MultipartFile headerImg,
+            * @RequestPart("photos")MultipartFile photos
+     2、日志打印检查上传的值对不对,保证基本信息获取到，下一步是如何将这些信息存储在服务器
+     3、如何将这些信息存储在服务器
+
+=========================错误处理=======================
+🌟🌟🌟🌟用到的文件:TableController.java , 404.html , 5xx.html
+1、默认规则
+默认情况下，Spring Boot提供/error处理所有错误的映射
+对于机器客户端，它将生成JSON响应，其中包含错误，HTTP状态和异常消息的详细信息。
+对于浏览器客户端，响应一个“ whitelabel”错误视图，以HTML格式呈现相同的数据
+
+ 在TableController中basic_table()写一个int i = 10/0;测试错误处理
+   但是想自定义错误页
+    ||  ||
+    ||  ||
+     \\ //
+ 在templates文件夹下新建error，用来存放错误页面： 404.html和5xx.html,并且加上 xmlns:th="http://www.thymeleaf.org"
+   ||  ||
+   ||  ||
+    \\ //
+在404.html里面，点击Back To Home按钮回到main页面  <a class="back-btn" th:href="@{main.html}"> Back To Home</a>
+在5xx.html显示错误信息：如何取出错误信息并打印出来？
+ <h3 th:text="${message}">Something went wrong.</h3>
+ <p class="nrml-txt" th:text="${trace}">Why not try refreshing you page? Or you can <a href="#">contact our support</a> if the problem persists.</p>
+
+
+=======================Web原生组件注入（Servlet、Filter、Listener）=======================
+
+🌟Servlet注入
+🌟🌟🌟🌟用到的文件：MyServlet.java  WebAdminApplication
+
+@ServletComponentScan(basePackages = "com.example.admin") :指定原生Servlet组件都放在com.example.admin
+@WebServlet(urlPatterns = "/my")：效果：直接响应，没有经过Spring的拦截器，不用登录直接可以访问http://localhost:8080/my
+
+新建一个servlet文件夹，在里面创建一个MyServlet
+   ||  ||
+   ||  ||
+    \\ //
+ @WebServlet(urlPatterns = "/my")要生效，要在WebAdminApplication中添加@ServletComponentScan
+
+
+🌟Filter注入 -- 🌟🌟🌟🌟用到的文件: MyFilter.java WebAdminApplication
+@WebFilter(urlPatterns={"/css/*","/images/*"}) + @ServletComponentScan
+
+步骤：servlet文件夹，在里面创建一个MyFilter
+
+
+🌟Listener注入监听 -- 🌟🌟🌟🌟用到的文件:MyServletContextListener.java WebAdminApplication
+@WebListener + @ServletComponentScan
+
+步骤：servlet文件夹，在里面创建一个MyServletContextListener
+
+
+========方法二：使用RegistrationBean ========
+🌟🌟🌟🌟用到的文件:MyRegistConfig.java
+ServletRegistrationBean, FilterRegistrationBean,  ServletListenerRegistrationBean
+
+步骤：
+现在把刚刚的注解：@WebListener @WebFilter  @WebServlet都注释掉
+   ||  ||
+   ||  ||
+    \\ //
+新建MyRegistConfig.java
+
+
+
+Filter作用
+过滤器JavaWeb三大组件之一，它与Servlet很相似！过滤器是用来拦截请求的，而不是处理请求的。
+当用户请求某个Servlet时，会先执行部署在这个请求上的Filter，
+如果Filter“放行”，那么会继承执行用户请求的Servlet；如果Filter不“放行”，那么就不会执行用户请求的Servlet。
+其实可以这样理解，当用户请求某个Servlet时，Tomcat会去执行注册在这个请求上的Filter，然后是否“放行”由Filter来决定。可以理解为，Filter来决定是否调用Servlet！当执行完成Servlet的代码后，还会执行Filter后面的代码。
+
+应用场景
+执行目标资源之前做预处理工作，例如设置编码，这种试通常都会放行，只是在目标资源执行之前做一些准备工作
+通过条件判断是否放行，例如校验当前用户是否已经登录，或者用户IP是否已经被禁用；
+在目标资源执行后，做一些后续的特殊处理工作，例如把目标资源输出的数据进行处理；
+
+
+======================定制化原理 SpringBoot定制化组件的几种方式========================
+🌟🌟🌟🌟用到的文件: AdminWebConfig.java
+定制化原理分析套路
+场景starter - xxxxAutoConfiguration - @Bean 导入xxx组件 - 绑定xxxProperties -- 绑定配置文件项
+
+定制化的常见方式
+1、编写自定义的配置类   xxxConfiguration；+ @Bean : 替换、增加容器中默认组件；视图解析器
+2、修改配置文件；
+3、xxxxxCustomizer；
+4、🌟Web应用 ：编写一个配置类实现 WebMvcConfigurer 即可定制化web功能；+ @Bean给容器中再扩展一些组件 --- 例子：AdminWebConfig.java
+       @Configuration
+       public class AdminWebConfig implements WebMvcConfigurer
+
+       如果想重写RequestMappingHandlerMapping这些非常底层的--WebMvcRegistrations
+
+5、@EnableWebMvc + WebMvcConfigurer —— @Bean  可以全面接管SpringMVC，所有规则全部自己重新配置； 实现定制和扩展功能
+
+
+========================数据访问 数据库场景的自动配置分析与整合测试========================
+🌟🌟🌟🌟用到的文件: pom.xml application.yaml  test下面的WebAdminApplicationTests.java
+定制化原理分析套路
+场景starter - xxxxAutoConfiguration - @Bean 导入xxx组件 - 绑定xxxProperties -- 绑定配置文件项
+1、导入JDBC场景
+2、导入mysql
+
+分析自动配置
+1、自动配置的类
+DataSourceAutoConfiguration ： 数据源的自动配置
+修改数据源相关的配置：spring.datasource
+   springboot使用@ConfigurationProperties(prefix="")加载配置
+数据库连接池的配置，是自己容器中没有DataSource才自动配置的
+底层配置好的连接池是：HikariDataSource
+
+
+1、DataSourceTransactionManagerAutoConfiguration： 事务管理器的自动配置
+2、JdbcTemplateAutoConfiguration： JdbcTemplate的自动配置，可以来对数据库进行crud
+      可以修改这个绑定配置项@ConfigurationProperties(prefix = "spring.jdbc") 来修改JdbcTemplate
+            @Bean
+            @Primary
+            JdbcTemplate   ：容器中有这个组件
+3、JndiDataSourceAutoConfiguration： jndi的自动配置
+4、XADataSourceAutoConfiguration： 分布式事务相关的
+
+在pom.xml引入依赖
+在 application.yaml 写好配置
+      ||  ||
+      ||  ||
+       \\ //
+在 WebAdminApplicationTests.java 写好测试类
+
+=========================整合第三方技术的两种方式=======================
+                         自定义
+                         找starter
+
+========================数据访问 自定义方式整合Druid数据源========================
+需要的效果：在登录之后，有一个监控页面，里面的每个功能都能显示出内容
+
+定制化原理分析套路
+场景starter - xxxxAutoConfiguration - @Bean 导入xxx组件 - 绑定xxxProperties -- 绑定配置文件项
+
+
+
+········
+自定义： 创建数据源
+🌟🌟🌟🌟用到的文件:pom.xml 、application.yaml 、MyDataSourceConfig.java 、WebAdminApplicationTests.java
+在pom.xml引入druid依赖
+      ||  ||
+      ||  ||
+       \\ //
+创建数据源配置文件：在Config下面新建一个MyDataSourceConfig.java
+       ||  ||
+       ||  ||
+        \\ //
+数据源属性比如 password、username这些都在application.yaml配好，不在MyDataSourceConfig.java写死
+   @ConfigurationProperties(prefix = "spring.datasource")
+   说明MyDataSourceConfig.java中 DuridDataSource 里面的属性和application.yaml文件 spring的datasource一一绑定
+      ||  ||
+      ||  ||
+       \\ //
+在 WebAdminApplicationTests.java 测试
+
+·······
+自定义：监控页面中SQL监控，使运行时候SQL监控显示内容
+StatViewServlet的用途包括：
+提供监控信息展示的html页面
+提供监控信息的JSON API
+
+🌟🌟🌟🌟用到的文件: MyDataSourceConfig.java 、  IndexController.java
+
+在MyDataSourceConfig.java配置StatViewServlet
+      ||  ||
+      ||  ||
+       \\ //
+ IndexController.java--访问/sql，直接可以看到监控数据
+       ||  ||
+       ||  ||
+        \\ //
+ 在MyDataSourceConfig.java
+ 打开druid监控统计功能--StatFilter
+ 效果：同时打开localhost:8080/druid/sql.html和localhost:8080/sql，不断刷新localhost:8080/sql页面，点击localhost:8080/druid/sql.html中上方的SQL监控
+
+········
+自定义：监控页面中Web应用，使运行时候Web应用显示内容
+内置监控中的web和Spring关联监控配置-- WebStatFilter
+🌟🌟🌟🌟用到的文件:MyDataSourceConfig.java
+
+步骤：在MyDataSourceConfig.java配置WebStatFilter，并且在AdminWebConfig里面的拦截器那里放行/sql，免得老是要登录
+效果：同时打开localhost:8080/druid/sql.html和localhost:8080/sql，不断刷新localhost:8080/sql页面，
+点击localhost:8080/druid/sql.html中上方的Web应用和URL应用都显示内容
+
+········
+自定义：监控页面中SQL防火墙
+🌟🌟🌟🌟用到的文件:MyDataSourceConfig.java
+
+步骤：在MyDataSourceConfig.java
+   添加防火墙：druidDataSource.setFilters("stat",wall");
+
+········
+自定义：监控页面中Spring监控
+········
+自定义：监控页面需要登录，并且限定哪些地址能登录
+在MyDataSourceConfig.java
+  registrationBean.addInitParameter("loginUsername","admin");
+  registrationBean.addInitParameter("loginPassword","12345");
+
+========================数据访问  druid数据源使用starter整合========================
+有了starter，上面自定义的都可以注释掉 等同于 MyDataSourceConfig.java没有用
+
+🌟🌟🌟🌟用到的文件:pom.xml  application.yaml
+🌟步骤：
+1、直接在pom.xml文件引入依赖，看一下官方的DruidDataSourceAutoConfigure.java
+
+  扩展配置项 spring.datasource.druid
+  1、@Import({DruidSpringAopConfiguration.class, DruidStatViewServletConfiguration.class, DruidWebStatFilterConfiguration.class, DruidFilterConfiguration.class})
+   分析自动配置
+   （1）DruidSpringAopConfiguration.class ---监控SpringBean的；
+             配置项：spring.datasource.druid.aop-patterns
+
+              @ConditionalOnProperty({"spring.datasource.druid.aop-patterns"})
+
+   （2）DruidStatViewServletConfiguration.class, 监控页的配置：
+              spring.datasource.druid.stat-view-servlet；默认开启
+
+              @ConditionalOnProperty(
+                  name = {"spring.datasource.druid.stat-view-servlet.enabled"},
+                  havingValue = "true"
+              )
+   （3）DruidWebStatFilterConfiguration.class, web监控配置；
+               spring.datasource.druid.web-stat-filter；默认开启
+
+               @ConditionalOnProperty(
+                   name = {"spring.datasource.druid.web-stat-filter.enabled"},
+                   havingValue = "true"
+               )
+   （4）DruidFilterConfiguration.class}) 所有Druid自己filter的配置：比如防火墙
+
+              private static final String FILTER_STAT_PREFIX = "spring.datasource.druid.filter.stat";
+              private static final String FILTER_CONFIG_PREFIX = "spring.datasource.druid.filter.config";
+              private static final String FILTER_ENCODING_PREFIX = "spring.datasource.druid.filter.encoding";
+              private static final String FILTER_SLF4J_PREFIX = "spring.datasource.druid.filter.slf4j";
+              private static final String FILTER_LOG4J_PREFIX = "spring.datasource.druid.filter.log4j";
+              private static final String FILTER_LOG4J2_PREFIX = "spring.datasource.druid.filter.log4j2";
+              private static final String FILTER_COMMONS_LOG_PREFIX = "spring.datasource.druid.filter.commons-log";
+              private static final String FILTER_WALL_PREFIX = "spring.datasource.druid.filter.wall";
+              private static final String FILTER_WALL_CONFIG_PREFIX = "spring.datasource.druid.filter.wall.config";
+
+
+          ||  ||
+          ||  ||
+           \\ //
+   2、所有功能都在application.yaml实现
+
+========================数据访问  整合mybatis xml配置========================
+🌟🌟🌟🌟用到的文件:pom.xml  application.yaml  AccountMappper.java  Account.java
+               AccountMapper.xml  mybatis-config.xml IndexController.java
+
+@EnableConfigurationProperties(MybatisProperties.class) ： MyBatis配置项绑定到类MybatisProperties.class上
+配置模式
+全局配置文件
+SqlSessionFactory: 自动配置好了
+SqlSession：自动配置了 SqlSessionTemplate 组合了SqlSession
+@Import(AutoConfiguredMapperScannerRegistrar.class）；
+Mapper： 只要我们写的操作MyBatis的接口标了 @Mapper 就会被自动扫描进来
+
+Mapper接口--->绑定Xml
+
+在pom.xml引入mybatis
+          ||  ||
+          ||  ||
+           \\ //
+在application.yaml写想修改的mybatis配置
+在resource下面新建一个mybatis，创建一个mybatis-config.xml（mybatis全局配置文件）
+              --用来在application.yaml
+          ||  ||
+          ||  ||
+           \\ //
+在mybatis下面新建mapper，操作数据库
+          ||  ||
+          ||  ||
+           \\ //
+  mybatis操作数据库，要先创建一个接口文件AccountMappper（在package com.example.admin;下面新建mapper，用来放AccountMappper.java）
+  它专门操作数据库的表account_db
+  AccountMappper里面写方法
+   *   返回账号信息 在bean下面新创建实体类Account.java,
+              下面三个属性是看着SQL中的account_db里面的字段来写  int---Long  varchar---String
+             ||  ||
+             ||  ||
+              \\ //
+    AccountMappper里面的方法实现要在xml文件中，在resource下面的mapper下面准备一个SQL映射文件AccountMapper.xml
+    AccountMapper.xml写查询方法
+               ||  ||
+               ||  ||
+                \\ //
+    回到application.yaml 指定全局配置文件位置，sql映射文件位置
+               ||  ||
+               ||  ||
+                \\ //
+    这时候可以使用了，去IndexController里面写一个方法测试
+    账号内容信息通过接口文件AccountMapper.java得到的--可以自动注入--但是开发是用service调用的
+                ||  ||
+                ||  ||
+                 \\ //
+    在com.example.admin新创建一个service下面的AccountService
+    调用AccountMapper.java
+                 ||  ||
+                 ||  ||
+                  \\ //
+    去IndexController测试
+    controller调用service（自动注入），service调用mapper
+                 ||  ||
+                 ||  ||
+                  \\ //
+    访问http://localhost:8080/acct?id=1能获取数据库的内容
+
+小结：
+  导入mybatis官方starter
+  编写mapper接口。标准@Mapper注解
+  编写sql映射文件并绑定mapper接口
+  在application.yaml中指定Mapper配置文件的位置，以及指定全局配置文件的信息 （建议；配置在mybatis.configuration）
+
+
+========================数据访问  整合mybatis 纯注解版========================
+不用xml配置
+🌟🌟🌟🌟用到的文件: City.java CityMapper.java  CityService.java IndexController.java
+
+         Create sql files
+         去mysql创建一个表
+                 ||  ||
+                 ||  ||
+                  \\ //
+         Create a domain class
+         在bean下面创建一个实体类domain class-- City.java --封装表里面的数据
+                 ||  ||
+                 ||  ||
+                  \\ //
+         Create a mapper interface 在mapper下面新建CityMapper.java
+                 ||  ||
+                 ||  ||
+                  \\ //
+         新建一个service调用CityMapper -- CityService.java
+                 ||  ||
+                 ||  ||
+                  \\ //
+             去IndexController测试
+                 ||  ||
+                 ||  ||
+                  \\ //
+          访问http://localhost:8080/city?id=1获取数据库的内容
+
+============混合使用配置和注解
+假设在CityMapper里面还定义一个方法：SQL语句很麻烦
+🌟🌟🌟🌟用到的文件: City.java CityMapper.java  CityService.java IndexController.java city.html
+
+ CityMapper.java里面定义一个insert方法，SQL语句很麻烦，所以创建一个CityMapper.xml写SQL语句
+                  ||  ||
+                  ||  ||
+                   \\ //
+      在 CityService定义一个saveCity()
+                  ||  ||
+                  ||  ||
+                   \\ //
+          去IndexController测试
+      由于是postMapping请求，写form表单--页面是city.html
+
+============复杂的SQL语句 使用注解
+insert方法还是用注解写
+
+       注释掉CityMapper.xml文件
+                  ||  ||
+                  ||  ||
+                   \\ //
+            CityMapper使用注解@Insert
+
+最佳实战：
+1、引入mybatis-starter
+2、配置application.yaml中，指定mapper-location位置即可
+3、编写Mapper接口并标注@Mapper注解
+4、简单方法直接注解方式
+5、复杂方法编写mapper.xml进行绑定映射
+在WebAdminApplication.java
+   @MapperScan("com.example.admin.mapper") 简化，om.example.admin.mapper下面的mapper都被扫描到，其他的接口就可以不用标注@Mapper注解
+
+========================

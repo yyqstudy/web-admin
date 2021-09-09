@@ -1,0 +1,67 @@
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/db?characterEncoding=utf-8&serverTimezone=UTC"
+    username: root
+    password: "88888888"
+    #type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # driver-class-name数据库驱动名字
+
+
+#   配置 DruidSpringAopConfiguration.class, DruidStatViewServletConfiguration.class, DruidWebStatFilterConfiguration.class, DruidFilterConfiguration.class
+
+#   配置druid的监控页功能--StatViewServlet
+#    监控页面需要账号密码登录
+
+#    添加防火墙、监控功能： setFilters("stat",wall")
+
+
+#      监控com.example.admin这个包下的所有组件
+    #      配置SQL慢查询和防火墙拦截:不能删表
+
+
+    druid:
+      aop-patterns: com.example.admin.*  #springbean监控
+      filters: stat,wall,slf4j  #所有开启的功能
+
+      stat-view-servlet: #监控页配置 监控页面需要账号密码登录 重置按钮无效
+        enabled: true
+        login-username: admin
+        login-password: 12345
+        resetEnable: false
+
+      web-stat-filter: #web监控
+        enabled: true
+        urlPattern: /*
+        exclusions: '*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*'
+
+
+      filter: #配置SQL慢查询和防火墙拦截:不能删表
+        stat: #sql监控
+          slow-sql-millis: 1000
+          logSlowSql: true
+          enabled: true
+        wall: #防火墙
+          enabled: true
+          config:
+            drop-table-allow: false
+
+
+
+
+
+  #    filters: stat,wall
+  jdbc:
+    template:
+      query-timeout: 3
+
+
+# 配置mybatis规则
+
+mybatis:
+#  config-location: classpath:mybatis/mybatis-config.xml #全局配置文件位置  可以不写全局；配置文件，所有全局配置文件的配置都放在configuration配置项中即可
+  mapper-locations: classpath:mybatis/mapper/*.xml  #sql映射文件位置
+  configuration:
+    map-underscore-to-camel-case: true
+
+
