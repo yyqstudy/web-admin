@@ -1,0 +1,54 @@
+🌟🌟🌟🌟🌟🌟用到的文件：JunitTest.java
+在src下面的test新建一个JunitTest.java,专门用做junit测试
+          ||  ||
+          ||  ||
+           \\ //
+这个测试直接运行文件里面的方法就可以了
+
+但是要使用springboot里面的容器内容，就要加上注解@SpringBootTest
+@SpringBootTest里面：
+@BootstrapWith(SpringBootTestContextBootstrapper.class)
+@ExtendWith({SpringExtension.class})
+
+=====================断言测试和前置条件=====================
+
+在src下面的test新建一个Junit5AssertionTest.java,专门用做嵌套测试
+          ||  ||
+          ||  ||
+           \\ //
+这个测试直接运行文件里面的方法就可以了
+
+断言（assertions）是测试方法中的核心部分，用来检查业务逻辑返回的数据是否合理
+就是判断
+以前的方法：就是通过System.out.println()打印一些内容看一下程序运行，就是👆的
+现在直接使用断言测试
+
+断言（assertions）和前置条件（assumption）区别：
+不满足条件的断言会使得测试方法失败，而不满足条件的前置条件只会使得测试方法的执行终止。
+前置条件可以看成是测试方法执行的前提，当该前提不满足时，就没有继续执行的必要。
+
+=====================嵌套测试=====================
+
+在src下面的test新建一个TestingAStackDemo.java,专门用做嵌套测试
+          ||  ||
+          ||  ||
+           \\ //
+这个测试直接运行文件里面的方法就可以了
+
+嵌套测试下，外层的test不能驱动内层的BeforeEach这些方法
+          但是内层的可以驱动外层的BeforeEach这些方法
+
+=====================参数化测试=====================
+用不同的参数多次运行测试 @ParameterizedTest
+
+@ValueSource: 为参数化测试指定入参来源，支持八大基础类以及String类型,Class类型
+@NullSource: 表示为参数化测试提供一个null的入参
+@EnumSource: 表示为参数化测试提供一个枚举入参
+@CsvFileSource：表示读取指定CSV文件内容作为参数化测试入参
+@MethodSource：表示读取指定方法的返回值作为参数化测试入参(注意方法返回需要是一个流)
+
+在src下面的test新建一个TestingParamDemo.java,专门用做嵌套测试
+          ||  ||
+          ||  ||
+           \\ //
+这个测试直接运行文件里面的方法就可以了

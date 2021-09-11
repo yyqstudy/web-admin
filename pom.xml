@@ -43,11 +43,19 @@
             <version>1.1.17</version>
         </dependency>
 
+        <!--引入mybatis-plus就不需要引入mybatis-->
         <!--引入mybatis-->
-        <dependency>
+      <!--  <dependency>
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
             <version>2.2.0</version>
+        </dependency>-->
+
+        <!--引入mybatis-plus-->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.4.3</version>
         </dependency>
 
 
@@ -89,10 +97,13 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+                            <source>1.8</source>
+                            <target>1.8</target>
                         </exclude>
                     </excludes>
                 </configuration>

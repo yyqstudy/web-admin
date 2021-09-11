@@ -48,7 +48,7 @@ public class AdminWebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new LoginInterceptor())
                 .addPathPatterns("/**")//所有请求被拦截，包括静态资源：把登录页面css格式都拦截了
-                .excludePathPatterns("/","/login","/css/**","/fonts/**","/images/**","/js/**","/aa/**"/*,"/sql"*/);//放行的请求要包括静态资源
+                .excludePathPatterns("/","/login","/css/**","/fonts/**","/images/**","/js/**","/aa/**" /*,"/sql"*/);//放行的请求要包括静态资源
     }
 
     /**

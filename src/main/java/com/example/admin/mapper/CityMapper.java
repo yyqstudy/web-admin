@@ -9,7 +9,7 @@ import org.apache.ibatis.annotations.Select;
 /**
  * 操作数据库中表City的mapper接口
  */
-@Mapper
+//@Mapper
 public interface CityMapper {
 
     //根据id查询城市

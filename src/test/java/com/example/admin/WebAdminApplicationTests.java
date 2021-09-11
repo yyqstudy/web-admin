@@ -1,6 +1,8 @@
 package com.example.admin;
 
 
+import com.example.admin.bean.User;
+import com.example.admin.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,21 @@ class WebAdminApplicationTests {
         log.info("数据源类型: {}",dataSource.getClass());
 
     }
+
+    /**
+     * 测试mybatis-plus usermapper是不是有增删改查的方法
+     * 要记得自动注入UserMapper
+     */
+    @Autowired
+    UserMapper userMapper;
+
+    @Test
+    void testUserMapper(){
+        //查询1号用户
+        User user = userMapper.selectById(1L);
+        log.info("用户信息：{}",user);
+    }
+
 
 
 

@@ -4,7 +4,7 @@
 解决：主页刷新还在主页--redirect重定向
 
 如何解决登录成功--要在主页作判断
-1、写一个Class User
+1、写一个Java bean： User
 2、然后去login.html的form表单，添加userName和password--form表单提交会把userName和password带上
 3、 在IndexController那里
     String username,String password封装成Class User ，登录成功把它们放在Session里面
@@ -46,7 +46,7 @@
          \\ //
    希望简洁修改页面跳转路径--以后只在一个common 页面修改路径即可： basic_table.html改成basic_table
    每个页面公共部分抽取放到一个common页面
-           ||  ||
+          ||  ||
           ||  ||
            \\ //
    怎么抽取公共内容:两种方法（th:fragment和选择器id）

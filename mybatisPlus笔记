@@ -1,0 +1,147 @@
+
+处理DataTables下面的AdvancedTable页面--dynamic_table
+========================数据访问  整合mybatis-plus ========================
+自动配置
+MybatisPlusAutoConfiguration 配置类，MybatisPlusProperties 配置项绑定。mybatis-plus：xxx 就是对mybatis-plus的定制
+SqlSessionFactory 自动配置好。底层是容器中默认的数据源--druid数据源
+mapperLocations 自动配置好的。有默认值。classpath*:/mapper/**/*.xml；任意包的类路径下的所有mapper文件夹下任意路径下的所有xml都是sql映射文件。  建议以后sql映射文件，放在 mapper下
+容器中也自动配置好了 SqlSessionTemplate
+@Mapper 标注的接口也会被自动扫描；建议直接 @MapperScan("com.example.admin.mapper") 批量扫描就行
+
+
+  先创建数据库表user
+          ||  ||
+          ||  ||
+           \\ //
+  dynamic_table.html是TableController处理跳转的
+  在TableController
+  现在要做的事情：从数据库中查出user表中用户进行展示
+          ||  ||
+          ||  ||
+           \\ //
+  在dynamic_table.html
+  删除下面的表格，保留页面只有一个表格
+          ||  ||
+          ||  ||
+           \\ //
+    整合mybatis-plus,在pom.xml引入依赖
+    把mybatis和jdbc的依赖注释掉
+          ||  ||
+          ||  ||
+           \\ //
+   在 application.yml 配置（之前在mybatis练习已经配置好了）
+          ||  ||
+          ||  ||
+           \\ //
+   在 Spring Boot 启动类中添加 @MapperScan 注解，扫描 Mapper 文件夹：（在servlet下面的WebAdminApplication）
+          ||  ||
+          ||  ||
+           \\ //
+         准备一个Javabean
+     编写实体类 User.java（User类，在bean下面新建一个User.java）
+          ||  ||
+          ||  ||
+           \\ //
+          准备一个mapper
+      编写Mapper类 接口文件 UserMapper.java
+      只需要我们的Mapper继承 BaseMapper 就可以拥有crud能力
+          ||  ||
+          ||  ||
+           \\ //
+     测试：usermapper是不是有增删改查的方法
+     在test文件夹下面的WebAdminApplicationTests测试
+
+⚠️如果数据库表名变成user_tb1，那么同样要在实体类那里添加注解@TableName("user_tb1")
+之前AccountService和CityService都是不规范的
+规范的做法是：创建一个service接口：UserService
+          ||  ||
+          ||  ||
+           \\ //
+    然后创建一个service实现类 UserServiceImpl --- 实现UserService接口
+          ||  ||
+          ||  ||
+           \\ //
+     定义的方法是放在接口里面的
+          ||  ||
+          ||  ||
+           \\ //
+     之前AccountService和CityService都是不规范的 全部改掉
+          ||  ||
+          ||  ||
+           \\ //
+       去TableController:注入userService ，想调用getAll()
+       回到UserServiceImpl和UserService接口定义
+          ||  ||
+          ||  ||
+           \\ //
+        UserService接口 extends IService<User>
+        因为IService里面有很多方法
+          ||  ||
+          ||  ||
+           \\ //
+        UserServiceImpl extends ServiceImpl
+        这样extends之后，UserServiceImpl里面什么方法都不用写,因为里面有很多方法
+          ||  ||
+          ||  ||
+           \\ //
+        此时回到TableController，不用定义getAll()，查询可以直接调用userService里面的方法list()
+        List<User> list = userService.list();
+          ||  ||
+          ||  ||
+           \\ //
+       来到dynamic_table.html
+       只保留一个tr，其余删掉
+       获取数据库表格内容 th:text="${user.name} ⚠️后来分页的的时候都存储在page变成 th:text="${page.name}
+          ||  ||
+          ||  ||
+           \\ //
+      添加分页，分页代码是直接打开当时源码dynamic_table.html，在浏览器打开之后，右键点击"检查"
+      找出分页代码，复制到这里的dynamic_table.html
+          ||  ||
+          ||  ||
+           \\ //
+     页面是哪一页应该自动获取，所以去TableController设置  userService.page()
+          ||  ||
+          ||  ||
+           \\ //
+      但是会报错，因为遍历用户时候不是users，因为所有数据放在page对象里面
+          ||  ||
+          ||  ||
+           \\ //
+      参照mybatisplus官方文档中的分页插件代码--在config包下面新建一个配置MyBatisPlusConfig
+      把官方文档的代码复制到MyBatisPlusConfig
+
+      效果：当前第 1 页 总计 3页 共5条记录
+          ||  ||
+          ||  ||
+           \\ //
+      处理页码按钮--去dynamic_table.html
+      遍历出来的总页码数--处理生成从哪一页到哪一页
+      当前页的按钮要高亮 num == page.current?'active':''
+
+
+🌟🌟🌟🌟🌟🌟用到的文件：dynamic_table.html和ableController.java
+     删除功能--X
+          ||  ||
+          ||  ||
+           \\ //
+     参照模板dynamic_table.html（admin素材里面）---UI Elements ---Buttons--检查
+          ||  ||
+          ||  ||
+           \\ //
+     在这个project的dynamic_table.html
+     <a class="btn btn-danger btn-sm" type="button">Delete</a>
+          ||  ||
+          ||  ||
+           \\ //
+     为了使删除按钮生效，去TableController那里定义删除方法
+          ||  ||
+          ||  ||
+           \\ //
+       回到页面dynamic_table.html指定超链接
+       <!--删除按钮 {id}是${user.id}-->
+       <a th:href="@{/user/delete/{id}(id=${user.id})}" class="btn btn-danger btn-sm" type="button">Delete</a>
+          ||  ||
+          ||  ||
+           \\ /
+     补充一些小功能：删除之后还在当前页，而且网址要显示pn=当前页
